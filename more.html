@@ -1,0 +1,108 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://kit.fontawesome.com/8aa17a250d.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    #loader { display: flex;}
+    .profile > p > strong { font-weight: 400;}
+    .profile { display: flex; align-items: center; justify-items: center; flex-direction: column;}
+    .profile > p { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 15px;}
+    .profile > p > span { font-size: 20px;}
+    .point { margin: 0px 0px 30px 0px; display: flex; align-items: center; justify-content: space-around;}
+    .profile > i { margin: 20% 0 0 0; font-size: 40px; padding: 10px; border-radius: 125px; border: 1px solid; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;}
+    .point > p { display: flex; align-items: center; justify-content: center; flex-direction: column; background: #022952; width: 80px; border-radius: 8px; padding: 10px;}
+    .point > p > strong { font-weight: 300;}
+    .links { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    .links-help { display: flex; gap: 10px; }
+    .links-help > a { color: #fff; gap: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 80px; background: #022952; padding: 10px; border-radius: 12px; }
+    a > i { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 125px; background: #031d38; padding: 10px; display: flex; font-size: 24px;}
+    .logout { margin: 20px; }
+    #logoutBtn { border-radius: 125px; border: none; background: #ff0000; padding: 8px; width: 120px; font-size: 18px; text-transform: uppercase; font-weight: 400; font-family: "Work Sans", serif; color: #fff;}
+</style>
+
+<div class="container">
+    <div id="userInfo" class="info"></div>
+    <div id="loader">
+    <div class="loader"></div>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        let username = localStorage.getItem("tour_local");
+        if (!username) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        $(".loader").show();
+
+        fetch("https://script.google.com/macros/s/AKfycbwXVFOOVxAcxNX98ffpqmEgbcvSqi3PzQ2oJD2nTWNvopyHs6FeJCHiZna92rd_sn4r/exec", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ username })
+        })
+        .then(response => response.json())
+        .then(data => {
+            $(".loader").hide();
+            if (data.error) {
+                $("#userInfo").html("<p style='color: red;'>" + data.error + "</p>");
+            } else {
+                $("#userInfo").html(`
+                <div class="profile">
+                    <i class="fa-solid fa-user"></i>
+                    <p><strong>Welcome,</strong> <span>${data.name}</span></p>
+                </div>
+                <div class="point">
+                    <p><strong>Coins</strong><span> ${data.coins}</span></p>
+                    <p><strong>Reffered</strong><span> ${data.referred}</span></p>
+                    <p><strong>Status</strong><span> ${data.status}</span></p>
+                </div>
+                <div class="links">
+                    <div class="links-help">
+                        <a href="add_coins.html">
+                            <i class="fa-solid fa-coins" style="display: flex;"></i>
+                            <span>Coins</span>
+                        </a>
+                        <a href="withdraw.html">
+                            <i class="fa-solid fa-sack-dollar" style="display: flex;"></i>
+                            <span>Withdraw</span>
+                        </a>
+                        <a href="withdraw_history.html">
+                            <i class="fa-solid fa-arrow-rotate-left" style="display: flex;"></i>
+                            <span>History</span>
+                        </a>
+                    </div>
+                    <div class="links-help">
+                        <a href="leaderboard.html">
+                            <i class="fa-solid fa-chart-simple" style="display: flex;"></i>
+                            <span>Players</span>
+                        </a>
+                        <a href="https://wa.me/917348076964">
+                            <i class="fa-solid fa-headphones-simple" style="display: flex;"></i>
+                            <span>Support</span>
+                        </a>
+                        <a href="refer.html">
+                            <i class="fa-solid fa-gift" style="display: flex;"></i>
+                            <span>Refer</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="logout">
+                        <button id="logoutBtn">Logout</button>
+                </div>
+                `);
+
+                $("#logoutBtn").click(function() {
+                    localStorage.removeItem("tour_local");
+                    window.location.href = "login.html";
+                });
+            }
+        })
+        .catch(() => {
+            $(".loader").hide();
+            $("#userInfo").html("<p style='color: red;'>Error fetching data.</p>");
+        });
+    });
+</script>

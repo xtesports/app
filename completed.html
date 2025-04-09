@@ -1,0 +1,76 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    .header { justify-content: center; }
+    #loader { display: flex; }
+    .card { display: flex; flex-direction: column; margin: 20px 20px 0px 20px; border-radius: 12px; padding: 20px; background: #022952; }
+    p > strong { font-weight: 400; font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }
+    th { background-color: #022952; color: white; }
+    .baap { display: flex; justify-content: space-around; flex-direction: column; gap: 10px; }
+    .title { font-size: 22px; font-weight: 400; }
+</style>
+<div class="header">
+    <h2>Completed</h2>
+</div>
+<div id="loader"><div class="loader"></div></div>
+<div id="completedList" style="display: none;"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const username = localStorage.getItem("tour_local");
+
+        if (!username) {
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("completedList").innerHTML = "<p>User not logged in.</p>";
+            document.getElementById("completedList").style.display = "block";
+            return;
+        }
+
+        fetch("https://script.google.com/macros/s/AKfycbxRtSf5KL0OltSenlnamceRoCsg99AbiSse_d5mCpCzPLsfJar-QimbmXtvs4_zt0At/exec?username=" + username)
+            .then(response => response.json())
+            .then(data => {
+                let html = "";
+                if (data.success && data.transactions.length > 0) {
+                    data.transactions.forEach(t => {
+                        html += `
+                            <div class="card">
+                                <p><strong class="title">${t.detail1}</strong></p>
+                                <div class="baap">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Username</th>
+                                                <th>Entry</th>
+                                                <th>Winning</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>${t.columnA}</td>
+                                                <td>${t.detail2}</td>
+                                                <td>${t.detail3}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = "<p>No completed transactions found.</p>";
+                }
+                document.getElementById("completedList").innerHTML = html;
+            })
+            .catch(() => {
+                document.getElementById("completedList").innerHTML = "<p>Error fetching data.</p>";
+            })
+            .finally(() => {
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("completedList").style.display = "block";
+            });
+    });
+</script>

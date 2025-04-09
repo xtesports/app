@@ -1,0 +1,246 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    .modal-backdrop, .join-modal, .participants, #loader { display: none; }
+    .header { justify-content: center;}
+    .tournament-card { background-color: #061d2f; border: 2px solid #444; border-radius: 25px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: transform 0.3s; }
+    .tournament-card:hover { transform: translateY(-5px); }
+    .tournament-card img { width: 100%; height: 150px; object-fit: cover; }
+    #tournamentList { display: flex; flex-direction: column; margin: 20px; gap: 20px; }
+    .tournament-card .details { padding: 15px; }
+    .tournament-card h2 { font-size: 16px; }
+    .details-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .details-grid div { background-color: #00376580; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); }
+    .details-grid div p { margin: 0; font-size: 14px; color: #90caf9; }
+    .details-grid div span { display: block; margin-top: 5px; font-size: 14px; color: #fff; }
+    .join-btn { display: block; width: 100%; margin: 10px auto; padding: 10px 0; background-color: #053145 ; border: none;
+    border-radius: 25px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; transition: background-color 0.3s; }
+    .join-btn:disabled { background-color: #555; cursor: not-allowed; }
+    .join-btn:hover:not(:disabled) { background-color: #2c6fe5; }
+    .submit-btn { width: 100%; background-color: #7c4dff; color: white; padding: 12px; border: none; border-radius: 25px; cursor: pointer; font-size: 16px; }
+    .join-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2d1b4d; padding: 30px; border-radius: 15px; z-index: 1000; width: 75%; max-width: 400px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); }
+    #gameName, #gameUID { width: 100%; outline: none; margin: 15px 0px; padding: 10px; border: 1px solid #7c4dff; border-radius: 25px; background: rgba(255, 255, 255, 0.1); color: white; box-sizing: border-box; }
+    #joinFormDiv h2 { margin-top: 0; color: #ffd700; }
+    .close-button { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: #fff; padding: 0; margin: 0; }
+    .joined , .no-slots { display: block; width: 100%; margin: 10px auto; padding: 10px 0; background-color: #00141c ; border: none;
+    border-radius: 25px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; transition: background-color 0.3s; }
+    #noTournament { position: relative; top: 40%;}
+    #joinModal { align-items: center; justify-content: center; flex-direction: column; }
+</style>
+<div class="header">
+    <h2>Events</h2>
+</div>
+
+<div id="tournamentList"></div>
+
+<p id="noTournament" style="text-align: center; display: none;">No Tournament</p>
+
+<div id="joinModal" class="join-modal">
+    <h3>Join Tournament</h3>
+    <input type="text" id="gameName" placeholder="Enter your game name">
+    <input type="text" id="gameUID" placeholder="Enter your game UID">
+    <button onclick="submitJoin()" class="submit-btn">Join</button>
+    <button onclick="closeModal()" class="close-button">×</button>
+    <div id="loader">
+        <div class="loader"></div>
+    </div>
+</div>
+<div id="modalBackdrop" class="modal-backdrop"></div>
+<div id="loader">
+    <div class="loader"></div>
+</div>
+<script>
+    let currentTournament = null;
+    let tournaments = [];
+
+    window.onload = async () => {
+        await fetchTournaments();
+    };
+
+    async function fetchTournaments() {
+        document.getElementById('loader').style.display = 'flex';
+        const mode = localStorage.getItem('mode') || '';
+
+        try {
+            const response = await fetch(`https://script.google.com/macros/s/AKfycbzdpDANPBJgdkWaFMAnUPq5C3mTAEdUs7Ol1a6oK95tBYIHUqzKlEtUkhFTe-YgndgI/exec?mode=${mode}`, {
+                method: 'GET'
+            });
+            tournaments = await response.json();
+            displayTournaments();
+        } catch (error) {
+            console.error('Error fetching tournaments:', error);
+        }
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    function displayTournaments() {
+        const container = document.getElementById('tournamentList');
+        container.innerHTML = '';
+        const userName = localStorage.getItem('tour_local');
+        const noTournamentText = document.getElementById('noTournament');
+
+        if (tournaments.length === 0) {
+            noTournamentText.style.display = 'block';
+        } else {
+            noTournamentText.style.display = 'none';
+        }
+
+        tournaments.forEach(tournament => {
+            const isJoined = tournament.usernames.includes(userName);
+            const div = document.createElement('div');
+            div.className = 'tournament-card';
+            div.onclick = () => openTournamentDetails(tournament);
+
+            let formattedTime = formatDateTime(tournament.timing);
+
+            let participantsList = tournament.usernames.length > 0 
+                ? `<div class="participants">Participants: ${tournament.usernames.map((username, index) => 
+                    `${username} (${tournament.gameInfo[index]})`).join(', ')}</div>` 
+                : '';
+
+            div.innerHTML = `
+                <img src="${tournament.image}" alt="${tournament.title}" class="tournament-image">
+                <div class="details">
+                    <h2>${tournament.title}</h2>
+                    <div class="details-grid">
+                        <div> 
+                    <p>Entry Fee: ${tournament.entryFee}</p>
+                    </div><div>
+                    <p>Prize: ${tournament.prize}</p>
+                    </div><div>
+                    <p>Slots: ${tournament.slot}</p>
+                    </div><div>
+                    <p>Mode: ${tournament.mode}</p>
+                    </div><div>
+                    <p>Map: ${tournament.map}</p>
+                    </div><div>
+                    <p>Timing: ${formattedTime}</p>
+                    </div>
+                    </div>
+                    ${getJoinButton(tournament, isJoined)}
+                    ${participantsList}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function formatDateTime(dateString) {
+        let date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
+    function getJoinButton(tournament, isJoined) {
+        if (tournament.slot <= 0) {
+            return `<button class="no-slots" disabled class="no-slots">No Slots</button>`;
+        }
+        if (isJoined) {
+            return `<button class="joined" disabled>Joined</button>`;
+        }
+        return `<button onclick="openJoinModal(event, '${tournament.id}')" class="join-btn" >Join</button>`;
+    }
+
+    function openJoinModal(event, tournamentId) {
+        event.stopPropagation();
+        currentTournament = tournaments.find(t => t.id === tournamentId);
+
+        if (currentTournament.slot <= 0) {
+            alert('Sorry, no slots available for this tournament.');
+            return;
+        }
+
+        document.getElementById('joinModal').style.display = 'flex';
+        document.getElementById('modalBackdrop').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('joinModal').style.display = 'none';
+        document.getElementById('modalBackdrop').style.display = 'none';
+        document.getElementById('gameName').value = '';
+        document.getElementById('gameUID').value = '';
+        currentTournament = null;
+    }
+
+    async function submitJoin() {
+        const userName = localStorage.getItem('tour_local');
+        if (!userName) {
+            alert('Please login first!');
+            return;
+        }
+
+        const gameName = document.getElementById('gameName').value;
+        if (!gameName) {
+            alert('Please enter your game name!');
+            return;
+        }
+
+        const gameUID = document.getElementById('gameUID').value;
+        if (!gameUID) {
+            alert('Please enter your game UID!');
+            return;
+        }
+
+        document.getElementById('loader').style.display = 'flex';
+
+        try {
+            if (currentTournament.slot <= 0) {
+                alert('Sorry, no slots available for this tournament.');
+                closeModal();
+                return;
+            }
+
+            const userResponse = await fetch('https://script.google.com/macros/s/AKfycbzdpDANPBJgdkWaFMAnUPq5C3mTAEdUs7Ol1a6oK95tBYIHUqzKlEtUkhFTe-YgndgI/exec', {
+                method: 'POST',
+                body: JSON.stringify({ action: 'checkWallet', username: userName })
+            });
+            const userData = await userResponse.json();
+            
+            if (userData.coins < currentTournament.entryFee) {
+                alert('Insufficient balance!');
+                document.getElementById('loader').style.display = 'none';
+                return;
+            }
+
+            const response = await fetch('https://script.google.com/macros/s/AKfycbzdpDANPBJgdkWaFMAnUPq5C3mTAEdUs7Ol1a6oK95tBYIHUqzKlEtUkhFTe-YgndgI/exec', {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'joinTournament',
+                    tournamentId: currentTournament.id,
+                    username: userName,
+                    gameName: gameName,
+                    gameUID: gameUID,
+                    entryFee: currentTournament.entryFee
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Successfully joined the tournament!');
+                closeModal();
+                fetchTournaments();
+            } else {
+                alert(result.message || 'Failed to join tournament');
+            }
+        } catch (error) {
+            console.error('Error joining tournament:', error);
+            alert('Failed to join tournament');
+        }
+
+        document.getElementById('loader').style.display = 'none';
+    }
+
+    function openTournamentDetails(tournament) {
+        localStorage.setItem('selectedTournamentTitle', tournament.title);
+        localStorage.setItem('selectedTournamentMode', tournament.mode);
+        window.location.href = 'tour_details.html';
+    }
+</script>

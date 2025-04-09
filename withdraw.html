@@ -1,0 +1,83 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://kit.fontawesome.com/8aa17a250d.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    #loader { display: flex;}
+</style>
+<form id="withdrawForm" class="form">
+    <div class="form-group">
+        <h2>Withdraw Funds</h2>
+        <input type="text" id="upi" name="upi" placeholder="UPI ID: " class="int" required>
+        <input type="number" id="amount" name="amount" placeholder="Amount: " class="int" required> 
+        <button type="submit" class="btn">Withdraw</button>
+    </div>
+</form>
+
+<p id="status"></p>
+
+<div id="loader" class="loader-container" style="display: none;">
+    <div class="loader"></div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const username = localStorage.getItem("tour_local");
+
+        if (!username) {
+            document.getElementById("status").innerText = "User not logged in.";
+            document.getElementById("withdrawForm").style.display = "none";
+            return;
+        }
+
+        document.getElementById("withdrawForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const upi = document.getElementById("upi").value;
+            const amount = parseFloat(document.getElementById("amount").value);
+
+            if (!upi || amount <= 0) {
+                alert("Please enter a valid UPI ID and amount.");
+                return;
+            }
+            document.getElementById("loader").style.display = "flex";
+
+            fetch("https://script.google.com/macros/s/AKfycbx-l-yJ8kGA81R2sjOc34OLM0zVCk8cqlE0WnVAGLc3PPxOb_xZ2LuLrIlVQJW9l73r/exec?username=" + username)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const balance = parseFloat(data.balance);
+                        if (amount > balance) {
+                            alert("Insufficient balance.");
+                            document.getElementById("loader").style.display = "none"; // Hide loader
+                        } else {
+                            fetch("https://script.google.com/macros/s/AKfycbx-l-yJ8kGA81R2sjOc34OLM0zVCk8cqlE0WnVAGLc3PPxOb_xZ2LuLrIlVQJW9l73r/exec", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                                body: new URLSearchParams({ username, upi, amount })
+                            })
+                            .then(response => response.json())
+                            .then(result => {
+                                alert(result.message);
+                                if (result.success) {
+                                    location.reload();
+                                }
+                                document.getElementById("loader").style.display = "none"; 
+                            })
+                            .catch(error => {
+                                alert("Error processing withdrawal.");
+                                document.getElementById("loader").style.display = "none";
+                            });
+                        }
+                    } else {
+                        alert("Error fetching balance.");
+                        document.getElementById("loader").style.display = "none";
+                    }
+                })
+                .catch(error => {
+                    alert("Error connecting to server.");
+                    document.getElementById("loader").style.display = "none";
+                });
+        });
+    });
+</script>

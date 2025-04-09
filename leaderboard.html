@@ -1,0 +1,80 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    .header { 
+        justify-content: center;
+    }
+    .body { 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    table {
+        width: 90%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #3498db;
+        color: white;
+    }
+
+    tr:hover {
+        background-color: #ddd;
+    }
+</style>
+<div class="header">
+    <h2>Leader Board</h2>
+</div>
+<diV class="body">
+<table id="userTable">
+    <thead>
+        <tr>
+            <th>S No.</th>
+            <th>Name</th>
+            <th>Coins</th>
+        </tr>
+    </thead>
+    <tbody id="userTableBody"></tbody>
+</table>
+</diV>
+<div id="loader">
+    <div class="loader"></div>
+</div>
+<script>
+    async function fetchUserData() {
+        const loader = document.getElementById("loader");
+        const tableBody = document.getElementById("userTableBody");
+
+        try {
+            loader.style.display = "flex";
+            const response = await fetch("https://script.google.com/macros/s/AKfycbxIFFJEBUGIQQhHMPb0RUaemSZOOWxfaiCxA52pJybWeKOSmLlIH_4PsS6kUMK4r4Ns/exec", { method: "POST" });
+            const data = await response.json();
+
+            tableBody.innerHTML = "";
+            data.forEach((user, index) => {
+                const row = `<tr>
+                    <td>${index + 1}</td>
+                    <td>${user.name}</td>
+                    <td>${user.number}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        } catch (error) {
+            console.error("Error fetching user data:", error);
+        } finally {
+            loader.style.display = "none";
+        }
+    }
+
+    fetchUserData();
+</script>

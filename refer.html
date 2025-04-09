@@ -1,0 +1,54 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    #referralBox { margin-top: 20px; display: flex; align-items: center; }
+    input { padding: 10px; width: 200px; text-align: center; font-size: 16px; }
+    button { padding: 10px; margin-left: 10px; cursor: pointer; }
+    .form-group img { width: 120px; border-radius: 125px; }
+    .body { display: flex; align-items: center; justify-content: center; flex-direction: column; background: linear-gradient(45deg, #00BCD4, #98ecff61); padding: 20px; margin: 10px; border-radius: 12px; }
+    .body p { text-align: center; margin: 15px 0px 0px 0px; }
+    .form { height: 80vh;}
+    .copy { border: none; background: transparent; font-size: 30px;}
+    #referralCode { background: #07284b; border: none; color: #fff; border-radius: 125px;}
+</style>
+<div class="form">
+<div class="form-group">
+  <img src="https://media.istockphoto.com/id/1149134493/vector/girl-is-making-funny-selfie-group-picture.jpg?s=612x612&w=0&k=20&c=K4DP2b8EreiO3TYnxCnJyJqgWr5dpgYF_HkTjTFljm8=">
+  <h3>Refer More Earn More!</h3>
+  <p>Invite Your Friends On App And Enjoy By Playing Tournaments And Each Refer You Got 5 Coins In Your Wallet.</p>
+</div>
+<div id="referralBox">
+    <input type="text" id="referralCode" readonly>
+    <button onclick="copyCode()" class="copy">📋</button>
+</div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let username = localStorage.getItem("tour_local");
+        if (!username) {
+            alert("No username found in local storage.");
+            return;
+        }
+
+        fetch('https://script.google.com/macros/s/AKfycbzXCuZ2BqnqpgNCAHCIG8ol5b33Y8VfhxvD2DmvsMYi3OPK6WuaGdwSP24hfBMqvA/exec?username=' + encodeURIComponent(username))
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("referralCode").value = data.referral;
+                } else {
+                    alert("Referral code not found.");
+                }
+            })
+            .catch(error => console.error('Error fetching referral code:', error));
+    });
+
+    function copyCode() {
+        let copyText = document.getElementById("referralCode");
+        copyText.select();
+        document.execCommand("copy");
+        alert("Copied: " + copyText.value);
+    }
+</script>

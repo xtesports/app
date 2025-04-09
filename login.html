@@ -1,0 +1,62 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    
+</style>
+<form id="loginForm" onsubmit="loginUser(event)" class="form">
+    <div class="form-group">
+    <h2>Login</h2>
+    <input type="text" id="identifier" name="identifier" required class="int" placeholder="Username: ">
+    <input type="password" id="password" name="password" required class="int" placeholder="Password: ">
+    <button type="submit" class="btn">Login</button>
+    <p>Don't Have Account <a href="signup.html">Click Here</a></p>
+    </div>
+</form>
+
+<div id="loader" style="display: none;">
+    <div class="loader"></div>
+</div>
+<script>
+    window.onload = function () {
+        if (localStorage.getItem("tour_local")) {
+            window.location.href = "index.html";
+        }
+    };
+
+    function loginUser(event) {
+        event.preventDefault();
+        document.getElementById("loader").style.display = "flex";
+
+        const form = document.getElementById("loginForm");
+        const formData = new FormData(form);
+
+        fetch("https://script.google.com/macros/s/AKfycbxEVb2y5PHtcrL1ZU09G3aFDuma6OWrXEUFq8ZqEFF6H-hsWxfPS9wsi4ewnFLG-6Ro/exec", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("loader").style.display = "none";
+
+            if (data.startsWith("Success:")) {
+                let username = data.split(":")[1];
+                localStorage.setItem("tour_local", username);
+                alert("Login successful!");
+                window.location.href = "index.html";
+            } else if (data === "INVALID_CREDENTIALS") {
+                alert("Invalid Username or Password.");
+            } else if (data === "BANNED_USER") {
+                alert("Your account is banned. Contact support for assistance.");
+            } else {
+                alert("Error logging in. Please try again.");
+            }
+        })
+        .catch(error => {
+            document.getElementById("loader").style.display = "none";
+            console.error("Error:", error);
+            alert("Error logging in!");
+        });
+    }
+</script>

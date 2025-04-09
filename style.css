@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+* { padding: 0; margin: 0;}
+a { text-decoration: none;}
+body { background: #031d38; font-family: "Work Sans", serif; color: #fff; }
+.form-group > h2 { margin: 5px; font-weight: 400; text-transform: uppercase; font-size: 20px;}
+.header { padding: 15px 10px; gap: 10px; display: flex; align-items: center; background: #022953; box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px; font-family: "Open Sans", serif;}
+#loader { position: fixed; width: 100%; justify-content: center; top: 50%;}
+.form { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;}
+.form-group { display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 15px; width: 80%; padding: 10px; border-radius: 12px; background: #07284b; border: 2px solid rgb(158, 54, 54);}
+.btn , .int { font-family: "Work Sans", serif; width: 95%; }
+.int { border-radius: 125px; outline: none; border: none; padding: 12px 15px; background: #dddddd; }
+.btn { padding: 12px; border-radius: 125px; border: none; color: #fff; background: #000;}
+.form-group > p > a  { text-decoration: none; color: #17dfc4; font-weight: 600;}
+.header > img { width: 35px; height: 35px; border-radius: 125px; }
+.header > h2 { font-weight: 400; font-size: 24px;}
+.customer-text { display: flex; align-items: center; gap: 10px; margin: 10px; }
+.customer-text hr { flex-grow: 1; border: none; border-top: 1.5px solid #fff; }
+.customer-text h3 { font-weight: 400; }
+#coinsDisplay { display: flex; align-items: center; padding: 4px 12px; background-color: #cecece; color: #000; border-radius: 125px;}

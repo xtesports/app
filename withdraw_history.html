@@ -1,0 +1,54 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    #withdrawList { display: flex; align-items: center; justify-content: center; flex-direction: column; width: 100%;}
+    .card { width: 70%; display: flex; flex-direction: column; gap: 10px; margin: 20px 20px 0px 20px; border-radius: 12px; padding: 20px; background: #022952;}
+    .loader { position: fixed; top: 50%; display: flex;  }
+</style>
+
+<div id="withdrawList">
+    <div class="loader"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const username = localStorage.getItem("tour_local");
+
+        if (!username) {
+            document.getElementById("withdrawList").innerHTML = "<p>User not logged in.</p>";
+            return;
+        }
+
+        fetch("https://script.google.com/macros/s/AKfycbwNm0qaWWqDIw_EJrqIZp1rSzgYHLxAP7-z4m3p22D-hNbQQxgHpgigkpwFJXcw5eaZ/exec?username=" + username)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const withdraws = data.withdraws;
+                    if (withdraws.length === 0) {
+                        document.getElementById("withdrawList").innerHTML = "<p>No withdrawals found.</p>";
+                        return;
+                    }
+
+                    let html = "";
+                    withdraws.forEach(w => {
+                        html += `
+                            <div class="card">
+                                <p><strong>UPI ID:</strong> ${w.upi}</p>
+                                <p><strong>Amount:</strong> ₹${w.amount}</p>
+                                <p><strong>Status:</strong> ${w.status ? w.status : "Pending"}</p>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById("withdrawList").innerHTML = html;
+                } else {
+                    document.getElementById("withdrawList").innerHTML = "<p>Error fetching data.</p>";
+                }
+            })
+            .catch(error => {
+                document.getElementById("withdrawList").innerHTML = "<p>Error connecting to server.</p>";
+            });
+    });
+</script>

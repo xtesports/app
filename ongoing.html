@@ -1,0 +1,100 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    .header { justify-content: center; }
+    #loader { display: flex;}
+    .rooms { padding: 20px; border-radius: 12px; background: #031d38;}
+    .card { display: flex; flex-direction: column; gap: 10px; margin: 20px 20px 0px 20px; border-radius: 12px; padding: 20px; background: #022952;}
+    strong { font-weight: 400;}
+    .rooms > p { font-size: 18px; display: flex; align-items: center; gap: 5px;}
+    .details > p { font-size: 17px; margin: 0px 10px;}
+    #upcomingList > p { text-align: center; position: fixed; width: 100%; top: 50%;}
+    .copy-btn { padding: 4px; background: transparent; border: none; font-size: 18px;}
+</style>
+<div class="header">
+    <h2>Ongoing</h2>
+</div>
+<div id="loader"><div class="loader"></div></div>
+<div id="upcomingList" style="display: none;"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const username = localStorage.getItem("tour_local");
+
+        if (!username) {
+            document.getElementById("upcomingList").innerHTML = "<p>User not logged in.</p>";
+            document.getElementById("loader").style.display = "none";
+            document.getElementById("upcomingList").style.display = "block";
+            return;
+        }
+
+        fetch("https://script.google.com/macros/s/AKfycbyClhVXcOHnigX8otAGGHdrd3_tLapIg93_7dSo8xdluLkOwevmh4h5ePYQ7hRWjaOI/exec?username=" + username)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("upcomingList").style.display = "block";
+
+                if (data.success) {
+                    const transactions = data.transactions;
+                    if (transactions.length === 0) {
+                        document.getElementById("upcomingList").innerHTML = "<p>No Ongoing Tournament Found.</p>";
+                        return;
+                    }
+
+                    let html = "";
+                    const now = new Date().getTime();
+
+                    transactions.forEach(t => {
+                        const timestamp = new Date(t.timestamp).getTime();
+                        const diffMinutes = (now - timestamp) / (1000 * 60);
+                        if (diffMinutes > 10) return;
+
+                        const formattedTime = formatTimestamp(t.timestamp);
+                        const valueE = t.detail4 || "Display Here";
+                        const valueF = t.detail5 || "Display Here";
+                        const copyBtnE = t.detail4 ? `<button class="copy-btn" onclick="copyText('${t.detail4}')">📋</button>` : "";
+                        const copyBtnF = t.detail5 ? `<button class="copy-btn" onclick="copyText('${t.detail5}')">📋</button>` : "";
+
+                        html += `
+                            <div class="card">
+                                <div class="rooms">
+                                    <p><strong>Room ID:</strong> ${valueE} ${copyBtnE}</p>
+                                    <p><strong>Password:</strong> ${valueF} ${copyBtnF}</p>
+                                </div>
+                                <div class="details">
+                                <p><strong>Tournament: </strong> ${t.detail1}</p>
+                                <p><strong>Entry Fee: </strong> ${t.detail2}</p>
+                                <p><strong>Timing: </strong> ${formattedTime}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById("upcomingList").innerHTML = html || "<p>No upcoming transactions found.</p>";
+                } else {
+                    document.getElementById("upcomingList").innerHTML = "<p>Error fetching data.</p>";
+                }
+            })
+            .catch(error => {
+                document.getElementById("loader").style.display = "none";
+                document.getElementById("upcomingList").style.display = "block";
+                document.getElementById("upcomingList").innerHTML = "<p>Error connecting to server.</p>";
+            });
+    });
+
+    function formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        const options = { month: "long", day: "numeric", hour: "numeric", minute: "numeric", hour12: true };
+        return date.toLocaleString("en-US", options);
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copied: " + text);
+        }).catch(err => {
+            console.error("Copy failed!", err);
+        });
+    }
+</script>
